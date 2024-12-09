@@ -122,8 +122,8 @@ export default {
 
         const promptTemplate = `
           You are an expert in AI agents. Analyze the following product idea and provide a JSON response.
-          Be brutally honest and critic with the scores and explanation. Don't try to be nice.
-          Remove the jargon buzzwords words and analyse the underlying idea only.
+          Be brutally honest and critic with the scores and explanation.
+          Remove the jargon buzzwords and analyse the underlying idea only.
           Your response must strictly follow this format (replace values only):
           ${JSON.stringify(jsonStructure, null, 2)}
 

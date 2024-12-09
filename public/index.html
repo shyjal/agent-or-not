@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Agent or Not! - Test Your Product's True Agenticity</title>
+    <meta name="description" content="Tired of AI products misusing the term 'agent'? Use GPT-4 and Claude to analyze how 'agentic' your AI product really is. Get honest scores on autonomy, goal-oriented behavior, persistence, and adaptability.">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://agentornot.ai/">
+    <meta property="og:title" content="AI Agent or Not! - Test Your Product's True Agenticity">
+    <meta property="og:description" content="Get a brutally honest analysis of how 'agentic' your AI product really is, scored by GPT-4 and Claude on key agent characteristics.">
+    <meta property="og:image" content="/og-image.jpg">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://agentornot.ai/">
+    <meta property="twitter:title" content="AI Agent or Not! - Test Your Product's True Agenticity">
+    <meta property="twitter:description" content="Get a brutally honest analysis of how 'agentic' your AI product really is, scored by GPT-4 and Claude on key agent characteristics.">
+    <meta property="twitter:image" content="/og-image.jpg">
+
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="icon" type="image/png" href="/favicon.png">
+
+    <!-- Add Inter font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script defer data-domain="agentornot.com" src="https://record.micro.company/script.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1><img src="favicon.png" width="25" style="margin-right: 5px;"/>Agent or Not!</h1>
+        <p>Tired of every AI product calling itself an 'agent'?</p>
+        <p>Enter a product idea to analyze how "agentic" it really is using GPT4o and Claude Sonnet.</p>
+        
+        <form id="analyzeForm">
+            <div class="textarea-container">
+                <textarea 
+                    name="productIdea" 
+                    placeholder="Describe your product idea here..." 
+                    maxlength="1000"
+                    oninput="updateCharCount(this)"
+                ></textarea>
+                <div class="char-count">0/1000</div>
+            </div>
+            <button type="submit">Analyze Idea</button>
+        </form>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <div class="loading-message" id="loadingMessage">Analyzing your idea...</div>
+        </div>
+
+        <div class="results" id="results">
+            <div class="overall-score">
+                <div class="score-value" id="overallScore">0%</div>
+                <div class="score-label">Overall Agenticity Score</div>
+                <div class="overall-toggle" onclick="toggleOverallAnalysis(this)">
+                    View Analysis
+                </div>
+                <div class="overall-analysis hidden" id="overallAnalysis"></div>
+            </div>
+
+            <div id="factorSections"></div>
+        </div>
+
+        <footer class="footer">
+            <p>
+                <a href="https://github.com/shyjal/agent-or-not" target="_blank" rel="noopener noreferrer">
+                    View on GitHub
+                </a>
+                &nbsp;•&nbsp;
+                <a href="https://shyjal.com" target="_blank" rel="noopener noreferrer">
+                    Built by Shyjal
+                </a>
+            </p>
+        </footer>
+    </div>
+
+    <script>
+        function createModelAnalysis(modelName, score, explanation) {
+            const scoreClass = score >= 50 ? 'high' : 'low';
+            return `
+                <div class="model-analysis">
+                    <div class="model-header">
+                        <div class="model-name">${modelName}</div>
+                        <div class="model-score ${scoreClass}">${score}%</div>
+                    </div>
+                    <div class="explanation">${explanation}</div>
+                </div>`;
+        }
+
+        function createFactorSection(factor, gpt4Data, claudeData) {
+            const avgScore = Math.round((gpt4Data.score + claudeData.score) / 2);
+            const scoreClass = avgScore >= 50 ? 'high' : 'low';
+            return `
+                <div class="factor-section">
+                    <div class="factor-header">
+                        <div class="factor-name">${factor}</div>
+                        <div class="factor-score ${scoreClass}">${avgScore}%</div>
+                    </div>
+                    <div class="progress-bar main">
+                        <div class="progress-fill ${scoreClass}" style="width: ${avgScore}%"></div>
+                    </div>
+                    <div class="toggle-models" onclick="this.classList.toggle('active'); this.nextElementSibling.classList.toggle('hidden')">
+                        Model Analysis
+                    </div>
+                    <div class="models-container hidden">
+                        ${createModelAnalysis('GPT-4o', gpt4Data.score, gpt4Data.explanation)}
+                        ${createModelAnalysis('Claude', claudeData.score, claudeData.explanation)}
+                    </div>
+                </div>`;
+        }
+
+        function displayAnalysis(data) {
+            const factorsDiv = document.getElementById('factorSections');
+            factorsDiv.innerHTML = '';
+
+            // Calculate overall score
+            const gpt4Overall = data.gpt4Analysis.overall.score;
+            const claudeOverall = data.claudeAnalysis.overall.score;
+            const overallAvg = Math.round((gpt4Overall + claudeOverall) / 2);
+            const overallScoreElement = document.getElementById('overallScore');
+            overallScoreElement.textContent = overallAvg + '%';
+            
+            // Add color class based on score
+            overallScoreElement.classList.remove('low', 'high');
+            overallScoreElement.classList.add(overallAvg >= 50 ? 'high' : 'low');
+
+            // Add overall analysis
+            const overallAnalysis = document.getElementById('overallAnalysis');
+            overallAnalysis.innerHTML = `
+                <div class="models-container">
+                    ${createModelAnalysis('GPT-4o', data.gpt4Analysis.overall.score, data.gpt4Analysis.overall.explanation)}
+                    ${createModelAnalysis('Claude', data.claudeAnalysis.overall.score, data.claudeAnalysis.overall.explanation)}
+                </div>
+            `;
+
+            // Create sections for each factor
+            const factors = ['autonomy', 'goalOriented', 'persistence', 'adaptability'];
+            factors.forEach(factor => {
+                const capitalizedFactor = factor.charAt(0).toUpperCase() + factor.slice(1);
+                const gpt4Data = data.gpt4Analysis.factors[factor];
+                const claudeData = data.claudeAnalysis.factors[factor];
+                
+                factorsDiv.innerHTML += createFactorSection(
+                    capitalizedFactor,
+                    gpt4Data,
+                    claudeData
+                );
+            });
+        }
+
+        const form = document.getElementById('analyzeForm');
+        const loading = document.getElementById('loading');
+        const loadingMessage = document.getElementById('loadingMessage');
+        const results = document.getElementById('results');
+        const submitButton = form.querySelector('button[type="submit"]');
+
+        const loadingMessages = [
+            "Analyzing your idea...",
+            "Evaluating autonomy levels...",
+            "Checking goal-oriented behavior...",
+            "Measuring persistence factors...",
+            "Assessing adaptability...",
+            "Calculating overall agenticity...",
+            "Comparing with known patterns...",
+            "Almost there..."
+        ];
+
+        let messageIndex = 0;
+        let messageInterval;
+
+        function startLoadingMessages() {
+            messageIndex = 0;
+            messageInterval = setInterval(() => {
+                loadingMessage.textContent = loadingMessages[messageIndex];
+                messageIndex = (messageIndex + 1) % loadingMessages.length;
+            }, 2000);
+        }
+
+        function stopLoadingMessages() {
+            clearInterval(messageInterval);
+            loadingMessage.textContent = loadingMessages[0];
+        }
+
+        results.style.display = 'none';
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            // Clear any previous errors
+            const previousError = document.querySelector('.error-message');
+            if (previousError) {
+                previousError.remove();
+            }
+
+            loading.style.display = 'block';
+            results.style.display = 'none';
+            submitButton.disabled = true;
+            startLoadingMessages();
+
+            const formData = new FormData(form);
+
+            try {
+                const response = await fetch(window.location.origin + '/analyze', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (!data.success) {
+                    throw new Error(data.error || 'Analysis failed');
+                }
+                
+                if (data.data.gpt4Analysis && data.data.claudeAnalysis) {
+                    displayAnalysis(data.data);
+                    results.style.display = 'block';
+                }
+
+                // Show any errors that occurred
+                if (data.data.errors) {
+                    const errorDiv = document.createElement('div');
+                    errorDiv.className = 'error-message';
+                    errorDiv.textContent = 'Note: ' + data.data.errors.join('; ');
+                    results.insertBefore(errorDiv, results.firstChild);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'error-message';
+                errorDiv.textContent = error.message || 'Something went wrong. Please try again.';
+                form.insertAdjacentElement('afterend', errorDiv);
+                results.style.display = 'none';
+            } finally {
+                loading.style.display = 'none';
+                stopLoadingMessages();
+                submitButton.disabled = false;
+            }
+        });
+
+        function toggleOverallAnalysis(element) {
+            element.classList.toggle('active');
+            const analysisDiv = document.getElementById('overallAnalysis');
+            analysisDiv.classList.toggle('hidden');
+            element.textContent = analysisDiv.classList.contains('hidden') ? 'View Analysis' : 'Hide Analysis';
+        }
+
+        function updateCharCount(textarea) {
+            const count = textarea.value.length;
+            const countDisplay = textarea.parentElement.querySelector('.char-count');
+            countDisplay.textContent = `${count}/1000`;
+            countDisplay.style.color = count > 900 ? '#ff6b6b' : '#666';
+        }
+    </script>
+</body>
+</html>

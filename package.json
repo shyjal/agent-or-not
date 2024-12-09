@@ -1,0 +1,18 @@
+{
+  "name": "agentornot",
+  "version": "1.0.0",
+  "main": "index.js",
+  "dependencies": {
+  },
+  "devDependencies": {},
+  "scripts": {
+    "dev": "npm run dev:setup && wrangler dev --local",
+    "deploy:html": "wrangler r2 object put agent-or-not/index.html --file ./public/index.html && wrangler r2 object put agent-or-not/styles.css --file ./public/styles.css && wrangler r2 object put agent-or-not/favicon.png --file ./public/favicon.png && wrangler r2 object put agent-or-not/og-image.jpg --file ./public/og-image.jpg",
+    "deploy:worker": "wrangler deploy",
+    "deploy": "npm run deploy:html && npm run deploy:worker",
+    "dev:setup": "wrangler r2 object put --local agent-or-not-dev/index.html --file ./public/index.html && wrangler r2 object put --local agent-or-not-dev/styles.css --file ./public/styles.css && wrangler r2 object put --local agent-or-not-dev/favicon.png --file ./public/favicon.png && wrangler r2 object put --local agent-or-not-dev/og-image.jpg --file ./public/og-image.jpg"
+  },
+  "author": "Shyjal",
+  "license": "MIT",
+  "description": "A website to find if a product idea is really agentic"
+}
